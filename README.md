@@ -1,8 +1,6 @@
-# RAMUS
+# KRAMUS
 
-### Project by Vitaliy Yakovchuk
-
-![Project Image](https://github.com/user-attachments/assets/72c8fcad-d8f1-4bc1-9186-ae4a1f1c9cf2)
+![Project Image](vitaliy.jpeg)
 
 **Java-based IDEF0 & DFD Modeler**
 
