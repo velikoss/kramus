@@ -1,0 +1,13 @@
+diagram: IDEF0 "Обработка заказа"
+function A1: "Принять заказ"
+  input: "Заказ клиента"
+  control: "Регламент обработки"
+  output: "Подтверждённый заказ"
+  mechanism: "Менеджер"
+function A2: "Проверить оплату"
+  input: A1.output
+  control: "Договор с банком"
+  output: "Оплаченный заказ"
+function A3: "Отгрузить товар"
+  input: A2.output
+  mechanism: "Склад"

@@ -1,0 +1,84 @@
+name: Build
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # ./gradlew works on windows-latest too under bash (Git Bash ships on the runner),
+      # so one command works across all three OSes instead of branching on gradlew.bat.
+      - name: Build and test
+        shell: bash
+        run: ./gradlew build --console=plain
+
+      - name: Build runnable jar
+        shell: bash
+        run: ./gradlew :local-client:shadowJar --console=plain
+
+      - name: Upload runnable jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramus-jar-${{ matrix.os }}
+          path: local-client/build/libs/ramus.jar
+
+      - name: Build macOS DMG
+        if: runner.os == 'macOS'
+        shell: bash
+        run: ./gradlew :local-client:macDmg --console=plain
+
+      - name: Upload macOS DMG
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramus-macos-dmg
+          path: dest/macos/*.dmg
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-${{ matrix.os }}
+          path: '**/build/reports/tests/**'
+          if-no-files-found: ignore
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/**/*.jar
+            artifacts/**/*.dmg

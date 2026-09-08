@@ -106,3 +106,5 @@ tmp/
 /dest/LICENSE
 
 .DS_Store
+
+.claude
